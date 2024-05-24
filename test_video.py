@@ -3,6 +3,15 @@ import numpy as np
 from matplotlib import pyplot as plt
 import csv
 
+import torch
+torch.cuda.is_available()
+
+
+
+torch.cuda.set_device(0)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
+
 def get_fps_and_resolution(video_path):
     # Open the video file
     video_capture = cv2.VideoCapture(video_path)
@@ -65,6 +74,14 @@ def main():
     print("Resolution:", resolution)
 
     video_capture = cv2.VideoCapture(video_path)
+
+    fps = video_capture.get(cv2.CAP_PROP_FPS)
+    frame_width = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    output_path = "UFO_tracking.mp4"
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4 file
+    out = cv2.VideoWriter(output_path, fourcc, fps, (frame_width, frame_height))
 
     csv_file_path = "UFO_coordinates.csv"
     csv_file = open(csv_file_path, mode='w', newline='')
@@ -147,6 +164,7 @@ def main():
 
         if white_dot_center:
             csv_writer.writerow([frame_number, white_dot_center[0], white_dot_center[1]])
+            cv2.circle(frame, white_dot_center, radius=5, color=(0, 0, 255), thickness=2)
 
         plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))  # Convert BGR to RGB for Matplotlib
         plt.axis('off')  # Turn off axis
@@ -154,6 +172,8 @@ def main():
             plt.plot(white_dot_center[0], white_dot_center[1], 'o', markerfacecolor='none', markeredgecolor='r', markersize=15)  # Plot a red dot
         plt.show(block=False)
         plt.pause(0.001)
+
+        out.write(frame)
 
         frame_number += 1
 
@@ -164,6 +184,7 @@ def main():
     csv_file.close()
     # Release the video capture object
     video_capture.release()
+    out.release()
     # Close all OpenCV windows
     cv2.destroyAllWindows()
 
