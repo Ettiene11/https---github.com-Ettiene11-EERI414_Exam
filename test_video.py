@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+import csv
 
 def get_fps_and_resolution(video_path):
     # Open the video file
@@ -65,6 +66,13 @@ def main():
 
     video_capture = cv2.VideoCapture(video_path)
 
+    csv_file_path = "UFO_coordinates.csv"
+    csv_file = open(csv_file_path, mode='w', newline='')
+    csv_writer = csv.writer(csv_file)
+    csv_writer.writerow(['frame', 'x_coord', 'y_coord'])  # Write the header
+
+    frame_number = 0
+
     while True:
         import numpy as np
         ret, frame = video_capture.read()
@@ -81,7 +89,7 @@ def main():
 
         blurred1 = cv2.filter2D(beeld, -1, kernel)
 
-        threshold = 20 #0.08
+        threshold = 15 #0.08
         Filtered1 = np.where(blurred1 < threshold, 255, blurred1)
 
         gray = 0.3*Filtered1[:,:,0] + 0.59*Filtered1[:,:,1] + 0.11*Filtered1[:,:,2]
@@ -132,21 +140,28 @@ def main():
         # image_ndarray = np.array(Image.open(image_path))  # Load image as ndarray
         white_dot_center = find_white_dot_center(gray)
         if white_dot_center:
-            print("Center of white dot:", white_dot_center)
+            print('Frame: ', frame_number)
+            print("UFO location:", white_dot_center)
         else:
-            print("No white dot found in the image.")
+            print("No location detected.")
+
+        if white_dot_center:
+            csv_writer.writerow([frame_number, white_dot_center[0], white_dot_center[1]])
 
         plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))  # Convert BGR to RGB for Matplotlib
         plt.axis('off')  # Turn off axis
         if white_dot_center:
-            plt.plot(white_dot_center[0], white_dot_center[1], 'ro')  # Plot a red dot
+            plt.plot(white_dot_center[0], white_dot_center[1], 'o', markerfacecolor='none', markeredgecolor='r', markersize=15)  # Plot a red dot
         plt.show(block=False)
         plt.pause(0.001)
+
+        frame_number += 1
 
         # Break the loop if 'Q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    csv_file.close()
     # Release the video capture object
     video_capture.release()
     # Close all OpenCV windows
