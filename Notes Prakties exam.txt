@@ -1,0 +1,7 @@
+Dont use functions such as IIR function
+Not all resources given SHOULD be used, but can be helpfull.
+Analyse diff techniques (eg filter techniques) with qualitative and quantitative measures
+Motivate every design choice
+Analyse-> Time, freq or both
+No submin of various subquestions
+Quantitative->Did you expect the outcome, and why (for eg linear phase of FIR filter, exspected lag)
