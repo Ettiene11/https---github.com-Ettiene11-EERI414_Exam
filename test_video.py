@@ -3,14 +3,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 import csv
 
-import torch
-torch.cuda.is_available()
+# import torch
+# torch.cuda.is_available()
 
 
 
-torch.cuda.set_device(0)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
+# torch.cuda.set_device(0)
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# print(device)
 
 def get_fps_and_resolution(video_path):
     # Open the video file
@@ -67,6 +67,31 @@ def find_white_dot_center(image):
     # If no white dot is found
     return None
 
+def custom_filter2D(image, kernel):
+    # Get kernel size
+    k_height, k_width = kernel.shape
+    
+    # Get image size
+    height, width = image.shape
+    
+    # Compute padding size
+    pad_height = k_height // 2
+    pad_width = k_width // 2
+    
+    # Pad the image
+    padded_image = np.pad(image, ((pad_height, pad_height), (pad_width, pad_width)), mode='wrap')
+    #Wrap optoin was chosen, beacuse zero values confused the threshold algorithm in thinking the UFO is in the corner, where zeros were padded.
+    
+    # Initialize output image
+    output_image = np.zeros_like(image)
+    
+    # Perform convolution
+    for i in range(height):
+        for j in range(width):
+            output_image[i, j] = np.sum(kernel * padded_image[i:i+k_height, j:j+k_width])
+    
+    return output_image
+
 def main():
     video_path = "Xfiles.mp4"  # Path to the video file
     fps, resolution = get_fps_and_resolution(video_path)
@@ -79,11 +104,11 @@ def main():
     frame_width = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    output_path = "UFO_tracking.mp4"
+    output_path = "UFO_tracking2.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4 file
     out = cv2.VideoWriter(output_path, fourcc, fps, (frame_width, frame_height))
 
-    csv_file_path = "UFO_coordinates.csv"
+    csv_file_path = "UFO_coordinates2.csv"
     csv_file = open(csv_file_path, mode='w', newline='')
     csv_writer = csv.writer(csv_file)
     csv_writer.writerow(['frame', 'x_coord', 'y_coord'])  # Write the header
@@ -104,12 +129,14 @@ def main():
                                    [2, 4, 2],
                                    [1, 2, 1]])
 
-        blurred1 = cv2.filter2D(beeld, -1, kernel)
+        # blurred1 = cv2.filter2D(gray, -1, kernel)
+        blurred1 = custom_filter2D(gray, kernel)
 
         threshold = 15 #0.08
         Filtered1 = np.where(blurred1 < threshold, 255, blurred1)
-
-        gray = 0.3*Filtered1[:,:,0] + 0.59*Filtered1[:,:,1] + 0.11*Filtered1[:,:,2]
+        
+        gray = Filtered1
+        # gray = 0.3*Filtered1[:,:,0] + 0.59*Filtered1[:,:,1] + 0.11*Filtered1[:,:,2]
 
         # window_size = 10
         # step = 10 

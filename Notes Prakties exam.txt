@@ -5,3 +5,9 @@ Motivate every design choice
 Analyse-> Time, freq or both
 No submin of various subquestions
 Quantitative->Did you expect the outcome, and why (for eg linear phase of FIR filter, exspected lag)
+
+
+-Mask
+-Gaussian blur
+-Threshold
+-PCA
